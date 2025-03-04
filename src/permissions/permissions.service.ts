@@ -21,9 +21,23 @@ export class PermissionsService {
     }
   }
 
-  async findAll(): Promise<Permission[]> {
+  async findAll(page?: number, limit?: number, orderBy?: string, direction?: string): Promise<Permission[]> {
     try {
-      return await this.permissionsRepository.find();
+      const skip = page && limit ? (page - 1) * limit : undefined;
+      const take = limit ?? undefined;
+
+      const permissions = await this.permissionsRepository.find({
+        skip,
+        take: limit,
+        order: {
+          [orderBy || 'id']: direction || 'ASC',
+        }
+      });
+      if (!permissions || permissions.length === 0) {
+        throw new NotFoundException(`Permissions is empty`);
+      }
+
+      return permissions;
     } catch (error) {
       throw new BadRequestException(`Failed to fetch permissions: ${error.message}`)
     }

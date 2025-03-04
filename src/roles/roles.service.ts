@@ -24,12 +24,20 @@ export class RolesService {
     }
   }
 
-  async findAll(): Promise<Role[]> {
+  async findAll(page?: number, limit?: number, orderBy?: string, direction?: string): Promise<Role[]> {
     try {
+      const skip = page && limit ? (page - 1) * limit : undefined;
+      const take = limit ?? undefined;
+
       const roles = await this.rolesRepository.find({
         relations: ['rolePermissions.role', 'rolePermissions.permission'],
+        skip,
+        take,
+        order: {
+          [orderBy || 'id']: direction || 'ASC',
+        },
       });
-      if (!roles) {
+      if (!roles || roles.length === 0) {
         throw new NotFoundException(`Roles is empty`);
       }
 
